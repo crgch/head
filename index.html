@@ -88,6 +88,10 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
 .swatches{display:flex;flex-wrap:wrap;gap:10px}
 .sw{width:38px;height:38px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
 .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.sw.custom{background:conic-gradient(#ff6b8b,#ffb86b,#ffe66b,#7be0a0,#6bc6ff,#a78bff,#ff6b8b);position:relative}
+.sw.custom::after{content:"+";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.colors{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.colors label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
 
 .switch{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-size:13.5px}
 .switch input{appearance:none;-webkit-appearance:none;width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:background .15s}
@@ -102,6 +106,10 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
 .filebtn{display:inline-flex}
 .filebtn input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .inline{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cropper{display:flex;gap:14px;align-items:center}
+.cropper canvas{width:120px;height:120px;flex:none;border-radius:14px;background:var(--field);border:1px solid var(--line);touch-action:none;cursor:grab}
+.cropper canvas:active{cursor:grabbing}
+.cropper .grp{flex:1;min-width:0}
 
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .switch input:focus-visible{outline-offset:3px}
@@ -170,7 +178,8 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
         </div>
       </div>
       <div class="blk">
-        <div class="field"><div class="lab">말풍선 스타일</div><div class="chips" data-group="style"><button class="chip" data-v="glass">유리</button><button class="chip" data-v="white">화이트</button><button class="chip" data-v="dark">다크</button><button class="chip" data-v="pink">핑크</button><button class="chip" data-v="blue">블루</button><button class="chip" data-v="gray">그레이</button></div></div>
+        <div class="field"><div class="lab">말풍선 스타일</div><div class="chips" data-group="style"><button class="chip" data-v="glass">유리</button><button class="chip" data-v="white">화이트</button><button class="chip" data-v="dark">다크</button><button class="chip" data-v="pink">핑크</button><button class="chip" data-v="blue">블루</button><button class="chip" data-v="gray">그레이</button><button class="chip" data-v="custom">직접 고르기</button></div></div>
+        <div class="colors" data-show="style=custom"><label>색 <input type="color" id="styleColor" data-k="styleColor"></label><label class="switch" style="gap:8px"><span>뒤 배경 비치게</span><input type="checkbox" id="styleGlass" data-k="styleGlass"></label></div>
         <div class="field"><div class="lab">꼬리 방향</div>
           <div class="chips" data-group="tail"><button class="chip" data-v="left">왼쪽 (인장 쪽)</button><button class="chip" data-v="right">오른쪽</button></div>
         </div>
@@ -193,12 +202,7 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
     <!-- 내용: 알림 -->
     <div class="blocks" data-show="mode=noti">
       <div class="blk">
-        <div class="field"><div class="lab">아이콘</div>
-          <div class="chips" data-group="icon"><button class="chip" data-v="message">메시지</button><button class="chip" data-v="heart">하트</button><button class="chip" data-v="moon">달</button><button class="chip" data-v="image">내 이미지</button></div>
-        </div>
-        <div class="inline" data-show="icon=image">
-          <label class="btn filebtn">아이콘 이미지 고르기<input type="file" id="iconFile" accept="image/*"></label>
-        </div>
+        <div class="grp iconpick" data-slot=""></div>
         <div class="row2">
           <label class="field"><span class="lab">제목 (보낸 사람)</span><input type="text" id="nTitle" data-k="nTitle"></label>
           <label class="field"><span class="lab">시간 표시</span><input type="text" id="nTime" data-k="nTime"></label>
@@ -206,7 +210,8 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
         <label class="field"><span class="lab">내용</span><textarea id="nBody" data-k="nBody" rows="2"></textarea></label>
       </div>
       <div class="blk">
-        <div class="field"><div class="lab">팝업 스타일</div><div class="chips" data-group="style"><button class="chip" data-v="glass">유리</button><button class="chip" data-v="white">화이트</button><button class="chip" data-v="dark">다크</button><button class="chip" data-v="pink">핑크</button><button class="chip" data-v="blue">블루</button><button class="chip" data-v="gray">그레이</button></div></div>
+        <div class="field"><div class="lab">팝업 스타일</div><div class="chips" data-group="style"><button class="chip" data-v="glass">유리</button><button class="chip" data-v="white">화이트</button><button class="chip" data-v="dark">다크</button><button class="chip" data-v="pink">핑크</button><button class="chip" data-v="blue">블루</button><button class="chip" data-v="gray">그레이</button><button class="chip" data-v="custom">직접 고르기</button></div></div>
+        <div class="colors" data-show="style=custom"><label>색 <input type="color" id="styleColor2" data-k="styleColor"></label><label class="switch" style="gap:8px"><span>뒤 배경 비치게</span><input type="checkbox" id="styleGlass2" data-k="styleGlass"></label></div>
         <div class="field"><div class="lab">알림 개수</div>
           <div class="chips" data-group="nLayout"><button class="chip" data-v="one">하나만</button><button class="chip" data-v="stack">뒤에 겹쳐 쌓기</button><button class="chip" data-v="list">이전 알림 아래로 펼치기</button></div>
         </div>
@@ -218,18 +223,21 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
       </div>
       <div class="blk" data-show="nLayout=list">
         <h3>이전 알림 (아래로 갈수록 오래된 것)</h3>
+        <label class="switch"><span>한 사람이 보낸 알림 (이름·아이콘 똑같이)</span><input type="checkbox" id="sameSender" data-k="sameSender"></label>
         <div class="sub">
           <div class="item">
             <label class="switch"><span>이전 알림 1</span><input type="checkbox" id="n2On" data-k="n2On"></label>
             <div class="grp" data-show="n2On">
-              <div class="row2"><input type="text" id="n2Title" data-k="n2Title" aria-label="이전 알림 1 제목" placeholder="제목"><input type="text" id="n2Time" data-k="n2Time" aria-label="이전 알림 1 시간" placeholder="시간"></div>
+              <div class="row2"><input type="text" id="n2Title" data-k="n2Title" data-show="sameSender=false" aria-label="이전 알림 1 제목" placeholder="제목"><input type="text" id="n2Time" data-k="n2Time" aria-label="이전 알림 1 시간" placeholder="시간"></div>
+              <div class="grp iconpick" data-slot="2" data-show="sameSender=false"></div>
               <textarea id="n2Body" data-k="n2Body" rows="2" aria-label="이전 알림 1 내용" placeholder="내용"></textarea>
             </div>
           </div>
           <div class="item">
             <label class="switch"><span>이전 알림 2</span><input type="checkbox" id="n3On" data-k="n3On"></label>
             <div class="grp" data-show="n3On">
-              <div class="row2"><input type="text" id="n3Title" data-k="n3Title" aria-label="이전 알림 2 제목" placeholder="제목"><input type="text" id="n3Time" data-k="n3Time" aria-label="이전 알림 2 시간" placeholder="시간"></div>
+              <div class="row2"><input type="text" id="n3Title" data-k="n3Title" data-show="sameSender=false" aria-label="이전 알림 2 제목" placeholder="제목"><input type="text" id="n3Time" data-k="n3Time" aria-label="이전 알림 2 시간" placeholder="시간"></div>
+              <div class="grp iconpick" data-slot="3" data-show="sameSender=false"></div>
               <textarea id="n3Body" data-k="n3Body" rows="2" aria-label="이전 알림 2 내용" placeholder="내용"></textarea>
             </div>
           </div>
@@ -260,6 +268,7 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
     <div class="blocks">
       <div class="blk">
         <div class="field"><div class="lab">기본 배경</div><div class="swatches" data-group="bgPreset" aria-label="배경 색"></div></div>
+        <div class="colors" data-show="bgPreset=custom"><label>색 1 <input type="color" id="bgC1" data-k="bgC1"></label><label>색 2 <input type="color" id="bgC2" data-k="bgC2"></label><span class="hint">같은 색 두 개면 단색이 돼요</span></div>
         <div class="inline">
           <label class="btn filebtn">배경 이미지 넣기<input type="file" id="bgFile" accept="image/*"></label>
           <button class="btn ghost" id="bgRemove" data-show="hasImg">이미지 빼기</button>
@@ -286,6 +295,7 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
       <div class="blk">
         <label class="switch"><span>폰 테두리 (다이내믹 아일랜드 포함)</span><input type="checkbox" id="frame" data-k="frame"></label>
         <div class="field" data-show="frame"><div class="lab">테두리 테마 <output id="themeName"></output></div><div class="swatches" data-group="frameTheme" aria-label="테두리 테마"></div></div>
+        <div class="colors" data-show="frameTheme=custom"><label>테두리 색 <input type="color" id="frameColor" data-k="frameColor"></label></div>
       </div>
       <div class="blk" data-show="frame">
         <label class="field"><span class="lab">테두리 두께 <output data-out="frameW"></output></span><input type="range" id="frameW" data-k="frameW" min="8" max="44" step="1"></label>
@@ -298,7 +308,8 @@ input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-rad
             <label class="field"><span class="lab">시계</span><input type="text" id="clock" data-k="clock"></label>
             <label class="field"><span class="lab">배터리 <output data-out="battery"></output></span><input type="range" id="battery" data-k="battery" min="1" max="100" step="1"></label>
           </div>
-          <div class="chips" data-group="statusColor"><button class="chip" data-v="light">흰 글씨</button><button class="chip" data-v="dark">검은 글씨</button></div>
+          <div class="chips" data-group="statusColor"><button class="chip" data-v="light">흰 글씨</button><button class="chip" data-v="dark">검은 글씨</button><button class="chip" data-v="custom">직접 고르기</button></div>
+          <div class="colors" data-show="statusColor=custom"><label>상태바 색 <input type="color" id="statusCustom" data-k="statusCustom"></label></div>
         </div>
       </div>
     </div>
@@ -366,13 +377,40 @@ const DEFAULTS = {
   mode:'bubble', tab:'content', guides:true, exportScale:'1',
   botText:'뭐 해?', botSub:'지금 · 당신에게 보낸 메시지', topOn:true, topText:'있잖아', topSub:'',
   style:'glass', tail:'left', mainSize:62, subSize:25, minW:900, sameW:false, bx:470, by:462,
-  icon:'message', nTitle:'익명의 누군가', nBody:'뭐 해? 안 자면 답장 줘', nTime:'지금', nLayout:'one',
+  icon:'message', iconZoom:100, iconX:0, iconY:0, icon2:'heart', icon2Zoom:100, icon2X:0, icon2Y:0, icon3:'moon', icon3Zoom:100, icon3X:0, icon3Y:0, sameSender:true, nTitle:'익명의 누군가', nBody:'뭐 해? 안 자면 답장 줘', nTime:'지금', nLayout:'one',
   n2On:true, n2Title:'익명의 누군가', n2Body:'자?', n2Time:'10분 전', n3On:true, n3Title:'익명의 누군가', n3Body:'오늘 고마웠어. 잘 들어갔어?', n3Time:'1시간 전', nScale:1, nx:750, ny:118,
   font:'Gothic A1', weight:800, useColor:false, color:'#4a2a38',
   bgPreset:'rose', hasImg:false, bgZoom:100, bgX:0, bgY:0, bgBlur:0, bgTint:0,
+  bgC1:'#f6b6cf', bgC2:'#b9a2ea', frameColor:'#7fa7d9', styleColor:'#ffffff', styleGlass:true, statusCustom:'#ffe9f2',
+  iconColOn:false, iconCol:'#ff7aa8', icon2ColOn:false, icon2Col:'#ff7aa8', icon3ColOn:false, icon3Col:'#ff7aa8',
   frame:true, frameTheme:'black', frameW:18, innerBezel:true, status:true, clock:'9:41', battery:100, statusColor:'light',
 };
-const BG_KEYS = new Set(['bgPreset','bgZoom','bgX','bgY','bgBlur','bgTint']);
+const BG_KEYS = new Set(['bgPreset','bgZoom','bgX','bgY','bgBlur','bgTint','bgC1','bgC2']);
+/* color helpers */
+function hexRgb(h){ h = String(h || '#000').replace('#',''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16) || 0; return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function rgbHex(r){ return '#' + r.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join(''); }
+function mix(a, b, t){ const x = hexRgb(a), y = hexRgb(b); return rgbHex(x.map((v, i) => v + (y[i] - v)*t)); }
+function rgba(h, a){ const r = hexRgb(h); return `rgba(${r[0]},${r[1]},${r[2]},${a})`; }
+function lum(h){ const r = hexRgb(h).map(v => { v /= 255; return v <= .03928 ? v/12.92 : Math.pow((v + .055)/1.055, 2.4); }); return .2126*r[0] + .7152*r[1] + .0722*r[2]; }
+function presetOf(){
+  if (st.bgPreset === 'custom'){
+    const a = st.bgC1, b = st.bgC2;
+    return {base:[a, b], blobs:[mix(a,'#ffffff',.3), mix(b,'#000000',.08), mix(b,'#ffffff',.28), mix(a,b,.5), mix(a,'#000000',.1)]};
+  }
+  return PRESETS[st.bgPreset] || PRESETS.rose;
+}
+function frameOf(){
+  if (st.frameTheme === 'custom'){ const c = st.frameColor; return {n:'직접', c:[mix(c,'#ffffff',.3), mix(c,'#000000',.12)], rim:mix(c,'#000000',.3), hi: lum(c) > .4 ? .6 : .3}; }
+  return FRAME_THEMES[st.frameTheme] || FRAME_THEMES.black;
+}
+function styleOf(key){
+  if (key === 'custom'){
+    const c = st.styleColor, g = !!st.styleGlass, light = lum(c) > .45;
+    return {glass: g ? 1 : 0, fill: rgba(c, g ? .55 : .97), sheen: light ? .25 : .1, stroke: g ? (light ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.2)') : null,
+            shadow: rgba(mix(c,'#000000',.6), .28), text: light ? mix(c,'#000000',.78) : '#ffffff'};
+  }
+  return STYLES[key] || STYLES.glass;
+}
 const store = {
   get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
   set(k,v){ try { localStorage.setItem(k,v); return true; } catch(e){ return false; } },
@@ -380,7 +418,9 @@ const store = {
 };
 let st = Object.assign({}, DEFAULTS);
 try { const s = JSON.parse(store.get('twh-v1') || 'null'); if (s){ Object.assign(st, s); if (s.nStack && !s.nLayout) st.nLayout = 'stack'; delete st.nStack; } } catch(e){}
-let bgImg = null, iconImg = null;
+let bgImg = null;
+const SLOTS = ['', '2', '3'];
+const iconImgs = {'': null, '2': null, '3': null};
 
 /* ---------- build UI bits ---------- */
 const fontSel = $('#font');
@@ -410,6 +450,7 @@ Object.entries(PRESETS).forEach(([k,p]) => {
   b.style.background = `radial-gradient(circle at 30% 30%, ${p.blobs[0]}, transparent 60%), linear-gradient(135deg, ${p.base[0]}, ${p.base[1]})`;
   swWrap.appendChild(b);
 });
+{ const b = document.createElement('button'); b.className = 'sw custom'; b.dataset.v = 'custom'; b.setAttribute('aria-label', '직접 고르기'); swWrap.appendChild(b); }
 
 const ftWrap = $('[data-group="frameTheme"]');
 Object.entries(FRAME_THEMES).forEach(([k,t]) => {
@@ -417,12 +458,33 @@ Object.entries(FRAME_THEMES).forEach(([k,t]) => {
   b.style.background = `linear-gradient(135deg, ${t.c[0]}, ${t.c[1]} 55%, ${t.c[0]})`;
   ftWrap.appendChild(b);
 });
+{ const b = document.createElement('button'); b.className = 'sw custom'; b.dataset.v = 'custom'; b.setAttribute('aria-label', '직접 고르기'); ftWrap.appendChild(b); }
+
+$$('.iconpick').forEach(box => {
+  const p = box.dataset.slot;
+  box.innerHTML = `
+    <div class="field"><div class="lab">아이콘</div>
+      <div class="chips" data-group="icon${p}"><button class="chip" data-v="message">메시지</button><button class="chip" data-v="heart">하트</button><button class="chip" data-v="moon">달</button><button class="chip" data-v="image">내 이미지</button></div>
+    </div>
+    <div class="colors" data-show="icon${p}!=image">
+      <label class="switch" style="gap:8px"><span>아이콘 색 직접</span><input type="checkbox" id="icon${p}ColOn" data-k="icon${p}ColOn"></label>
+      <input type="color" id="icon${p}Col" data-k="icon${p}Col" data-show="icon${p}ColOn" aria-label="아이콘 색">
+    </div>
+    <div class="cropper" data-show="icon${p}=image">
+      <canvas class="iconCrop" data-slot="${p}" width="240" height="240" aria-label="아이콘 자르기"></canvas>
+      <div class="grp">
+        <label class="btn filebtn" style="justify-self:start">아이콘 이미지 고르기<input type="file" class="iconFile" data-slot="${p}" accept="image/*"></label>
+        <label class="field"><span class="lab">확대 <output data-out="icon${p}Zoom"></output></span><input type="range" id="icon${p}Zoom" data-k="icon${p}Zoom" min="100" max="400" step="1"></label>
+        <p class="hint">네모 안을 끌어서 보일 부분을 고르세요.</p>
+      </div>
+    </div>`;
+});
 
 /* ---------- binding ---------- */
 function fmt(k, v){
   if (k === 'minW') return +v === 0 ? '자동' : v + 'px';
   if (k === 'nScale') return Math.round(v*100) + '%';
-  if (k === 'bgZoom') return v + '%';
+  if (k === 'bgZoom' || /^icon\d?Zoom$/.test(k)) return v + '%';
   if (k === 'battery') return v + '%';
   if (k === 'frameW') return v + 'px';
   if (k === 'bgTint') return v > 0 ? '+' + v : String(v);
@@ -438,9 +500,11 @@ function syncUI(){
   $$('[data-tab]').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === st.tab)));
   $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== st.tab);
   $('#tabContent').textContent = st.mode === 'noti' ? '알림 팝업' : '말풍선';
-  const tn = $('#themeName'); if (tn) tn.textContent = (FRAME_THEMES[st.frameTheme] || FRAME_THEMES.black).n;
+  const tn = $('#themeName'); if (tn) tn.textContent = frameOf().n;
   $$('[data-show]').forEach(el => {
-    const [k, val] = el.dataset.show.split('=');
+    const sh = el.dataset.show;
+    if (sh.includes('!=')){ const [k, val] = sh.split('!='); el.hidden = String(st[k]) === val; return; }
+    const [k, val] = sh.split('=');
     el.hidden = val === undefined ? !st[k] : String(st[k]) !== val;
   });
 }
@@ -524,7 +588,7 @@ function bgFor(S){
     g.imageSmoothingQuality = 'high';
     g.drawImage(bgImg, dx, dy, dw, dh);
   } else {
-    const p = PRESETS[st.bgPreset] || PRESETS.rose;
+    const p = presetOf();
     const lg = g.createLinearGradient(0, 0, W, H); lg.addColorStop(0, p.base[0]); lg.addColorStop(1, p.base[1]);
     g.fillStyle = lg; g.fillRect(0, 0, W, H);
     BLOB_POS.forEach(([x,y,r], i) => {
@@ -585,7 +649,7 @@ function wrap(ctx, text, maxW, maxLines){
 
 /* ---------- surfaces ---------- */
 function drawSurface(ctx, S, path, bb, styleKey, alpha){
-  const sty = STYLES[styleKey] || STYLES.glass;
+  const sty = styleOf(styleKey);
   ctx.save(); ctx.globalAlpha = alpha ?? 1;
   ctx.save();
   ctx.translate(-OFF, 0);
@@ -653,7 +717,7 @@ function drawBubbleText(ctx, L, x, y, sty){
   }
 }
 function drawBubbles(ctx, S){
-  const sty = STYLES[st.style] || STYLES.glass, flip = st.tail === 'right';
+  const sty = styleOf(st.style), flip = st.tail === 'right';
   const hasBot = st.botText.trim() || st.botSub.trim();
   const hasTop = st.topOn && (st.topText.trim() || st.topSub.trim());
   const B = hasBot ? layoutBubble(ctx, st.botText, st.botSub.trim(), st.minW) : null;
@@ -677,27 +741,38 @@ function drawBubbles(ctx, S){
 }
 
 /* ---------- notification ---------- */
-function drawIcon(ctx, x, y, s){
-  const r = s*0.235, p = rrPath(x, y, s, s, r);
-  ctx.save(); ctx.clip(p);
+function iconPlace(p, s, cx, cy){
+  const img = iconImgs[p];
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const sc = Math.max(s/iw, s/ih) * (st['icon' + p + 'Zoom'] || 100)/100, dw = iw*sc, dh = ih*sc;
+  const ox = st['icon' + p + 'X'] || 0, oy = st['icon' + p + 'Y'] || 0;
+  return {x: cx - dw/2 + (ox/100)*(dw - s)/2, y: cy - dh/2 + (oy/100)*(dh - s)/2, w: dw, h: dh};
+}
+function drawIcon(ctx, x, y, s, p){
+  p = p || '';
+  const type = st['icon' + p] || 'message';
+  const r = s*0.235, clipPath = rrPath(x, y, s, s, r);
+  ctx.save(); ctx.clip(clipPath);
   const cx = x + s/2, cy = y + s/2;
-  if (st.icon === 'image' && iconImg){
-    const iw = iconImg.naturalWidth || iconImg.width, ih = iconImg.naturalHeight || iconImg.height, sc = Math.max(s/iw, s/ih);
-    ctx.drawImage(iconImg, cx - iw*sc/2, cy - ih*sc/2, iw*sc, ih*sc);
+  if (type === 'image' && iconImgs[p]){
+    const q = iconPlace(p, s, cx, cy);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(iconImgs[p], q.x, q.y, q.w, q.h);
   } else {
-    const cols = {message:['#72f07f','#25c23d'], heart:['#ff96bd','#ff4b89'], moon:['#9d8bff','#5641d2'], image:['#d9cbd3','#b8a6b1']}[st.icon] || ['#72f07f','#25c23d'];
+    const own = st['icon' + p + 'ColOn'] && type !== 'image' ? st['icon' + p + 'Col'] : null;
+    const cols = own ? [mix(own,'#ffffff',.28), own] : ({message:['#72f07f','#25c23d'], heart:['#ff96bd','#ff4b89'], moon:['#9d8bff','#5641d2'], image:['#d9cbd3','#b8a6b1']}[type] || ['#72f07f','#25c23d']);
     const lg = ctx.createLinearGradient(0, y, 0, y + s); lg.addColorStop(0, cols[0]); lg.addColorStop(1, cols[1]);
     ctx.fillStyle = lg; ctx.fillRect(x, y, s, s);
     ctx.fillStyle = '#fff';
-    if (st.icon === 'heart'){
+    if (type === 'heart'){
       const k = s*0.62;
       ctx.beginPath(); ctx.moveTo(cx, cy + 0.3*k);
       ctx.bezierCurveTo(cx - 0.56*k, cy - 0.02*k, cx - 0.3*k, cy - 0.46*k, cx, cy - 0.17*k);
       ctx.bezierCurveTo(cx + 0.3*k, cy - 0.46*k, cx + 0.56*k, cy - 0.02*k, cx, cy + 0.3*k); ctx.fill();
-    } else if (st.icon === 'moon'){
+    } else if (type === 'moon'){
       ctx.beginPath(); ctx.arc(cx, cy, s*0.27, 0, Math.PI*2); ctx.fill();
       ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(cx + s*0.13, cy - s*0.1, s*0.24, 0, Math.PI*2); ctx.fill();
-    } else if (st.icon === 'image'){
+    } else if (type === 'image'){
       ctx.globalAlpha = .9; ctx.beginPath(); ctx.arc(cx, cy, s*0.12, 0, Math.PI*2); ctx.fill();
     } else {
       ctx.beginPath(); ctx.ellipse(cx, cy - s*0.02, s*0.32, s*0.265, 0, 0, Math.PI*2); ctx.fill();
@@ -708,15 +783,16 @@ function drawIcon(ctx, x, y, s){
   ctx.restore();
 }
 function notiItems(){
-  const items = [{t:st.nTitle, b:st.nBody, m:st.nTime}];
+  const items = [{t:st.nTitle, b:st.nBody, m:st.nTime, s:''}];
   if (st.nLayout === 'list'){
-    if (st.n2On) items.push({t:st.n2Title, b:st.n2Body, m:st.n2Time});
-    if (st.n3On) items.push({t:st.n3Title, b:st.n3Body, m:st.n3Time});
+    const same = st.sameSender;
+    if (st.n2On) items.push({t: same ? st.nTitle : st.n2Title, b:st.n2Body, m:st.n2Time, s: same ? '' : '2'});
+    if (st.n3On) items.push({t: same ? st.nTitle : st.n3Title, b:st.n3Body, m:st.n3Time, s: same ? '' : '3'});
   }
   return items;
 }
 function drawNotiCard(ctx, S, it, top, ghosts){
-  const k = st.nScale, sty = STYLES[st.style] || STYLES.glass, col = textColor(sty);
+  const k = st.nScale, sty = styleOf(st.style), col = textColor(sty);
   const nw = 860*k, pad = 26*k, icon = 92*k, gx = 22*k;
   const tS = 33*k, bS = 30*k, mS = 25*k;
   const left = st.nx - nw/2;
@@ -734,7 +810,7 @@ function drawNotiCard(ctx, S, it, top, ghosts){
     });
   }
   drawSurface(ctx, S, rrPath(left, top, nw, h, r), {x:left, y:top, w:nw, h}, st.style);
-  drawIcon(ctx, left + pad, top + (h - icon)/2, icon);
+  drawIcon(ctx, left + pad, top + (h - icon)/2, icon, it.s);
   let ty = top + (h - contentH)/2;
   ctx.textBaseline = 'middle'; ctx.fillStyle = col;
   setFont(ctx, mS, 500);
@@ -763,7 +839,7 @@ function drawNoti(ctx, S){
 
 /* ---------- phone chrome ---------- */
 function drawStatus(ctx){
-  const c = st.statusColor === 'dark' ? '#1b1519' : '#ffffff';
+  const c = st.statusColor === 'custom' ? st.statusCustom : st.statusColor === 'dark' ? '#1b1519' : '#ffffff';
   const T = st.frameW, y = st.frame ? T + 38 : 46, xl = st.frame ? T + 74 : 64, xr = st.frame ? W - T - 36 : 1462;
   ctx.fillStyle = c; ctx.strokeStyle = c; ctx.textBaseline = 'middle';
   setFont(ctx, 40, 600, 'Gothic A1'); ctx.textAlign = 'left';
@@ -804,7 +880,7 @@ function drawGuides(ctx){
 function drawScene(ctx, S, guides){
   ctx.setTransform(S, 0, 0, S, 0, 0);
   ctx.clearRect(0, 0, W, H);
-  const T = st.frameW, sr = Math.max(28, 80 - T), th = FRAME_THEMES[st.frameTheme] || FRAME_THEMES.black;
+  const T = st.frameW, sr = Math.max(28, 80 - T), th = frameOf();
   const scr = st.frame ? {x:T, y:T, w:W-2*T, h:H-2*T, r:sr} : {x:0, y:0, w:W, h:H, r:0};
   if (st.frame){
     const g = ctx.createLinearGradient(0, 0, W, H);
@@ -841,7 +917,26 @@ function sizeCanvas(){
   const s = Math.min(2, Math.max(0.4, Math.round((wrapEl.clientWidth * dpr / W) * 10) / 10));
   if (s !== S || cv.width !== Math.round(W*s)){ S = s; cv.width = Math.round(W*S); cv.height = Math.round(H*S); }
 }
-function draw(){ sizeCanvas(); drawScene(cx, S, st.guides); }
+const cropCvs = $$('.iconCrop');
+function drawCrop(){
+  if (st.mode !== 'noti') return;
+  cropCvs.forEach(cc => {
+    const p = cc.dataset.slot;
+    if (st['icon' + p] !== 'image') return;
+    const n = cc.width, c = cc.getContext('2d'), img = iconImgs[p];
+    c.setTransform(1,0,0,1,0,0); c.clearRect(0, 0, n, n);
+    if (!img){
+      c.fillStyle = getComputedStyle(document.body).getPropertyValue('--muted') || '#888';
+      c.font = '600 26px ' + getComputedStyle(document.body).fontFamily; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('이미지 없음', n/2, n/2); return;
+    }
+    const q = iconPlace(p, n, n/2, n/2);
+    c.imageSmoothingQuality = 'high'; c.drawImage(img, q.x, q.y, q.w, q.h);
+    const path = new Path2D(); path.rect(0, 0, n, n); rr(path, 0, 0, n, n, n*0.235);
+    c.fillStyle = 'rgba(0,0,0,0.45)'; c.fill(path, 'evenodd');
+  });
+}
+function draw(){ sizeCanvas(); drawScene(cx, S, st.guides); drawCrop(); }
 function schedule(){ if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); }); }
 async function ensureFonts(){
   const txt = [st.botText, st.botSub, st.topText, st.topSub, st.nTitle, st.nBody, st.nTime, st.n2Title, st.n2Body, st.n2Time, st.n3Title, st.n3Body, st.n3Time].join('') + '가나다abc0123';
@@ -879,6 +974,28 @@ cv.addEventListener('pointermove', e => {
 const endDrag = () => { if (drag){ drag = null; changed(); } };
 cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
 
+cropCvs.forEach(cc => {
+  const p = cc.dataset.slot;
+  let cdrag = null;
+  cc.addEventListener('pointerdown', e => {
+    if (!iconImgs[p]) return;
+    cc.setPointerCapture(e.pointerId);
+    cdrag = {x: e.clientX, y: e.clientY, a: st['icon' + p + 'X'] || 0, b: st['icon' + p + 'Y'] || 0};
+  });
+  cc.addEventListener('pointermove', e => {
+    if (!cdrag || !iconImgs[p]) return;
+    const n = cc.width, k = n / cc.getBoundingClientRect().width;
+    const q = iconPlace(p, n, n/2, n/2);
+    const clamp = v => Math.round(Math.min(100, Math.max(-100, v)));
+    const spanX = (q.w - n)/2, spanY = (q.h - n)/2;
+    if (spanX > 0.5) st['icon' + p + 'X'] = clamp(cdrag.a + (e.clientX - cdrag.x)*k / spanX * 100);
+    if (spanY > 0.5) st['icon' + p + 'Y'] = clamp(cdrag.b + (e.clientY - cdrag.y)*k / spanY * 100);
+    schedule();
+  });
+  const end = () => { if (cdrag){ cdrag = null; changed(); } };
+  cc.addEventListener('pointerup', end); cc.addEventListener('pointercancel', end);
+});
+
 /* ---------- images ---------- */
 function loadImage(src){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
 async function shrink(file, maxW, maxH, type, q){
@@ -901,12 +1018,14 @@ async function setBgFile(file){
 }
 $('#bgFile').addEventListener('change', e => { setBgFile(e.target.files[0]); e.target.value = ''; });
 $('#bgRemove').addEventListener('click', () => { bgImg = null; st.hasImg = false; store.del('twh-bg'); invalidateBg(); syncUI(); changed(); });
-$('#iconFile').addEventListener('change', async e => {
-  const f = e.target.files[0]; e.target.value = '';
+$$('.iconFile').forEach(inp => inp.addEventListener('change', async e => {
+  const p = inp.dataset.slot, f = e.target.files[0]; e.target.value = '';
   if (!f) return;
-  const {img, data} = await shrink(f, 300, 300, 'image/png');
-  iconImg = img; store.set('twh-icon', data); changed();
-});
+  const {img, data} = await shrink(f, 640, 640, 'image/png');
+  iconImgs[p] = img; st['icon' + p + 'Zoom'] = 100; st['icon' + p + 'X'] = 0; st['icon' + p + 'Y'] = 0;
+  if (!store.set('twh-icon' + p, data)) store.del('twh-icon' + p);
+  syncUI(); changed();
+}));
 ['dragenter','dragover'].forEach(t => wrapEl.addEventListener(t, e => { e.preventDefault(); wrapEl.classList.add('drop'); }));
 ['dragleave','drop'].forEach(t => wrapEl.addEventListener(t, e => { e.preventDefault(); wrapEl.classList.remove('drop'); }));
 wrapEl.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) setBgFile(f); });
@@ -944,16 +1063,20 @@ $('#resetBtn').addEventListener('click', () => {
   const b = $('#resetBtn');
   if (!resetArm){ b.textContent = '한 번 더 누르면 초기화'; resetArm = setTimeout(() => { resetArm = 0; b.textContent = '설정 초기화'; }, 3000); return; }
   clearTimeout(resetArm); resetArm = 0; b.textContent = '설정 초기화';
-  st = Object.assign({}, DEFAULTS); bgImg = null; iconImg = null;
-  store.del('twh-bg'); store.del('twh-icon');
+  st = Object.assign({}, DEFAULTS); bgImg = null;
+  store.del('twh-bg');
+  SLOTS.forEach(p => { iconImgs[p] = null; store.del('twh-icon' + p); });
   fillWeights(); invalidateBg(); syncUI(); changed(); toast('처음 상태로 돌렸어요');
 });
 
 /* ---------- boot ---------- */
 (async () => {
-  const bgData = store.get('twh-bg'), icData = store.get('twh-icon');
+  const bgData = store.get('twh-bg');
   if (st.hasImg && bgData){ try { bgImg = await loadImage(bgData); } catch(e){ st.hasImg = false; } } else st.hasImg = false;
-  if (icData){ try { iconImg = await loadImage(icData); } catch(e){} }
+  for (const p of SLOTS){
+    const d = store.get('twh-icon' + p);
+    if (d){ try { iconImgs[p] = await loadImage(d); } catch(e){} }
+  }
   fillWeights(); syncUI(); invalidateBg(); refresh();
 })();
 })();
