@@ -633,4 +633,331 @@ function layoutBubble(ctx, text, sub, minW){
   setFont(ctx, main, st.weight);
   const tw = Math.max(0, ...lines.map(t => ctx.measureText(t).width));
   let sw = 0;
-  if (sub){ setFont(ctx, ss,
+  if (sub){ setFont(ctx, ss, Math.min(600, Math.max(500, st.weight - 200))); sw = ctx.measureText(sub).width; }
+  const padX = main*0.85, padV = main*0.42, lh = main*1.18, gap = main*0.16, slh = ss*1.35;
+  const w = Math.max(Math.max(tw, sw) + padX*2, minW, main*1.6);
+  const h = padV*2 + lines.length*lh + (sub ? gap + slh : 0);
+  const r = Math.min(h/2, main*1.07);
+  return {lines, sub, w, h, r, padX, padV, lh, gap, slh, main, ss};
+}
+function drawBubbleText(ctx, L, x, y, sty){
+  const col = textColor(sty);
+  ctx.fillStyle = col; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  setFont(ctx, L.main, st.weight);
+  L.lines.forEach((t, i) => ctx.fillText(t, x + L.padX, y + L.padV + i*L.lh + L.lh/2));
+  if (L.sub){
+    setFont(ctx, L.ss, Math.min(600, Math.max(500, st.weight - 200)));
+    ctx.globalAlpha = 0.62;
+    ctx.fillText(L.sub, x + L.padX, y + L.padV + L.lines.length*L.lh + L.gap + L.slh/2);
+    ctx.globalAlpha = 1;
+  }
+}
+function drawBubbles(ctx, S){
+  const sty = STYLES[st.style] || STYLES.glass, flip = st.tail === 'right';
+  const hasBot = st.botText.trim() || st.botSub.trim();
+  const hasTop = st.topOn && (st.topText.trim() || st.topSub.trim());
+  const B = hasBot ? layoutBubble(ctx, st.botText, st.botSub.trim(), st.minW) : null;
+  const T = hasTop ? layoutBubble(ctx, st.topText, st.topSub.trim(), st.sameW ? Math.max(st.minW, B ? B.w : 0) : 0) : null;
+  if (T && B && st.sameW) B.w = Math.max(B.w, T.w);
+  let yBottom = st.by;
+  if (B){
+    const x = flip ? st.bx - B.w : st.bx, y = yBottom - B.h;
+    B.x = x; B.y = y; yBottom = y - B.main*0.26;
+  }
+  if (T){
+    const x = flip ? st.bx - T.w : st.bx, y = yBottom - T.h;
+    drawSurface(ctx, S, bubblePath(x, y, T.w, T.h, T.r, false, false, 0), {x, y, w:T.w, h:T.h}, st.style);
+    drawBubbleText(ctx, T, x, y, sty);
+  }
+  if (B){
+    const tw = B.main*0.5;
+    drawSurface(ctx, S, bubblePath(B.x, B.y, B.w, B.h, B.r, true, flip, tw), {x:B.x, y:B.y, w:B.w, h:B.h}, st.style);
+    drawBubbleText(ctx, B, B.x, B.y, sty);
+  }
+}
+
+/* ---------- notification ---------- */
+function drawIcon(ctx, x, y, s){
+  const r = s*0.235, p = rrPath(x, y, s, s, r);
+  ctx.save(); ctx.clip(p);
+  const cx = x + s/2, cy = y + s/2;
+  if (st.icon === 'image' && iconImg){
+    const iw = iconImg.naturalWidth || iconImg.width, ih = iconImg.naturalHeight || iconImg.height, sc = Math.max(s/iw, s/ih);
+    ctx.drawImage(iconImg, cx - iw*sc/2, cy - ih*sc/2, iw*sc, ih*sc);
+  } else {
+    const cols = {message:['#72f07f','#25c23d'], heart:['#ff96bd','#ff4b89'], moon:['#9d8bff','#5641d2'], image:['#d9cbd3','#b8a6b1']}[st.icon] || ['#72f07f','#25c23d'];
+    const lg = ctx.createLinearGradient(0, y, 0, y + s); lg.addColorStop(0, cols[0]); lg.addColorStop(1, cols[1]);
+    ctx.fillStyle = lg; ctx.fillRect(x, y, s, s);
+    ctx.fillStyle = '#fff';
+    if (st.icon === 'heart'){
+      const k = s*0.62;
+      ctx.beginPath(); ctx.moveTo(cx, cy + 0.3*k);
+      ctx.bezierCurveTo(cx - 0.56*k, cy - 0.02*k, cx - 0.3*k, cy - 0.46*k, cx, cy - 0.17*k);
+      ctx.bezierCurveTo(cx + 0.3*k, cy - 0.46*k, cx + 0.56*k, cy - 0.02*k, cx, cy + 0.3*k); ctx.fill();
+    } else if (st.icon === 'moon'){
+      ctx.beginPath(); ctx.arc(cx, cy, s*0.27, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(cx + s*0.13, cy - s*0.1, s*0.24, 0, Math.PI*2); ctx.fill();
+    } else if (st.icon === 'image'){
+      ctx.globalAlpha = .9; ctx.beginPath(); ctx.arc(cx, cy, s*0.12, 0, Math.PI*2); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.ellipse(cx, cy - s*0.02, s*0.32, s*0.265, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx - s*0.2, cy + s*0.15); ctx.quadraticCurveTo(cx - s*0.22, cy + s*0.27, cx - s*0.31, cy + s*0.3);
+      ctx.quadraticCurveTo(cx - s*0.12, cy + s*0.3, cx - s*0.04, cy + s*0.2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+function notiItems(){
+  const items = [{t:st.nTitle, b:st.nBody, m:st.nTime}];
+  if (st.nLayout === 'list'){
+    if (st.n2On) items.push({t:st.n2Title, b:st.n2Body, m:st.n2Time});
+    if (st.n3On) items.push({t:st.n3Title, b:st.n3Body, m:st.n3Time});
+  }
+  return items;
+}
+function drawNotiCard(ctx, S, it, top, ghosts){
+  const k = st.nScale, sty = STYLES[st.style] || STYLES.glass, col = textColor(sty);
+  const nw = 860*k, pad = 26*k, icon = 92*k, gx = 22*k;
+  const tS = 33*k, bS = 30*k, mS = 25*k;
+  const left = st.nx - nw/2;
+  const textX = left + pad + icon + gx, textW = nw - pad*2 - icon - gx;
+  const title = String(it.t || ''), time = String(it.m || ''), bodyTxt = String(it.b || '');
+  setFont(ctx, bS, Math.min(500, st.weight));
+  const body = bodyTxt.trim() ? wrap(ctx, bodyTxt, textW, 3) : [];
+  const tLH = tS*1.28, bLH = bS*1.34;
+  const contentH = (title.trim() ? tLH : 0) + body.length*bLH;
+  const h = Math.max(icon, contentH) + pad*2, r = 46*k;
+  if (ghosts){
+    [2,1].forEach(i => {
+      const w2 = nw*(1 - 0.055*i), x2 = st.nx - w2/2, y2 = top + 15*k*i;
+      drawSurface(ctx, S, rrPath(x2, y2, w2, h, r), {x:x2, y:y2, w:w2, h}, st.style, i === 2 ? 0.55 : 0.8);
+    });
+  }
+  drawSurface(ctx, S, rrPath(left, top, nw, h, r), {x:left, y:top, w:nw, h}, st.style);
+  drawIcon(ctx, left + pad, top + (h - icon)/2, icon);
+  let ty = top + (h - contentH)/2;
+  ctx.textBaseline = 'middle'; ctx.fillStyle = col;
+  setFont(ctx, mS, 500);
+  const tmW = time.trim() ? ctx.measureText(time).width : 0;
+  if (title.trim()){
+    if (tmW){ ctx.globalAlpha = .55; ctx.textAlign = 'right'; ctx.fillText(time, left + nw - pad - 4*k, ty + tLH/2); ctx.globalAlpha = 1; }
+    ctx.textAlign = 'left'; setFont(ctx, tS, Math.max(600, st.weight));
+    ctx.fillText(ellipsize(ctx, title, textW - tmW - 18*k), textX, ty + tLH/2);
+    ty += tLH;
+  } else if (tmW){
+    ctx.globalAlpha = .55; ctx.textAlign = 'right'; ctx.fillText(time, left + nw - pad - 4*k, top + pad + mS*0.6); ctx.globalAlpha = 1;
+  }
+  ctx.textAlign = 'left'; setFont(ctx, bS, Math.min(500, st.weight));
+  ctx.globalAlpha = .88;
+  body.forEach((t, i) => ctx.fillText(t, textX, ty + i*bLH + bLH/2));
+  ctx.globalAlpha = 1;
+  return h;
+}
+function drawNoti(ctx, S){
+  let top = st.ny;
+  notiItems().forEach((it, i) => {
+    const h = drawNotiCard(ctx, S, it, top, i === 0 && st.nLayout === 'stack');
+    top += h + 12*st.nScale;
+  });
+}
+
+/* ---------- phone chrome ---------- */
+function drawStatus(ctx){
+  const c = st.statusColor === 'dark' ? '#1b1519' : '#ffffff';
+  const T = st.frameW, y = st.frame ? T + 38 : 46, xl = st.frame ? T + 74 : 64, xr = st.frame ? W - T - 36 : 1462;
+  ctx.fillStyle = c; ctx.strokeStyle = c; ctx.textBaseline = 'middle';
+  setFont(ctx, 40, 600, 'Gothic A1'); ctx.textAlign = 'left';
+  ctx.fillText(st.clock, xl, y + 1);
+  const bw = 74, bh = 35, bx = xr - bw - 7;
+  ctx.lineWidth = 3; ctx.globalAlpha = .55; ctx.beginPath(); rr(ctx, bx, y - bh/2, bw, bh, 10); ctx.stroke();
+  ctx.beginPath(); rr(ctx, bx + bw + 3, y - 7, 5, 14, 2.5); ctx.fill(); ctx.globalAlpha = 1;
+  const lvl = Math.max(0.06, st.battery/100);
+  ctx.beginPath(); rr(ctx, bx + 5, y - bh/2 + 5, (bw - 10)*lvl, bh - 10, 6); ctx.fill();
+  setFont(ctx, 32, 600, 'Gothic A1'); ctx.textAlign = 'right';
+  const pct = st.battery + '%', px = bx - 14; ctx.fillText(pct, px, y + 1);
+  const wx = px - ctx.measureText(pct).width - 36;
+  ctx.lineCap = 'round'; ctx.lineWidth = 5.5;
+  [8, 17, 26].forEach(rad => { ctx.beginPath(); ctx.arc(wx, y + 13, rad, Math.PI*1.25, Math.PI*1.75); ctx.stroke(); });
+  ctx.beginPath(); ctx.arc(wx, y + 13, 3.5, 0, Math.PI*2); ctx.fill();
+  const sx = wx - 40 - 4*12;
+  [10, 17, 24, 31].forEach((hh, i) => { ctx.beginPath(); rr(ctx, sx + i*12, y + 15 - hh, 8.5, hh, 2.5); ctx.fill(); });
+  ctx.lineCap = 'butt';
+}
+function drawIsland(ctx){
+  const iy = st.frameW + 9;
+  ctx.fillStyle = '#000'; ctx.beginPath(); rr(ctx, W/2 - 140, iy, 280, 58, 29); ctx.fill();
+  ctx.fillStyle = '#0b0d18'; ctx.beginPath(); ctx.arc(W/2 + 108, iy + 29, 12, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#20305e'; ctx.beginPath(); ctx.arc(W/2 + 108, iy + 29, 5, 0, Math.PI*2); ctx.fill();
+}
+function drawGuides(ctx){
+  ctx.save();
+  const cx = 207, cy = 500, r = 167;
+  ctx.fillStyle = 'rgba(20,8,16,0.28)'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+  ctx.setLineDash([12, 9]); ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.stroke();
+  ctx.setLineDash([]);
+  setFont(ctx, 24, 600, 'Gothic A1'); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('인장 자리', cx, cy - r*0.42);
+  ctx.restore();
+}
+
+/* ---------- scene ---------- */
+function drawScene(ctx, S, guides){
+  ctx.setTransform(S, 0, 0, S, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const T = st.frameW, sr = Math.max(28, 80 - T), th = FRAME_THEMES[st.frameTheme] || FRAME_THEMES.black;
+  const scr = st.frame ? {x:T, y:T, w:W-2*T, h:H-2*T, r:sr} : {x:0, y:0, w:W, h:H, r:0};
+  if (st.frame){
+    const g = ctx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, th.c[0]); g.addColorStop(.5, th.c[1]); g.addColorStop(1, th.c[0]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (st.innerBezel && st.frameTheme !== 'black'){
+      const bw = Math.min(9, T*0.5);
+      ctx.fillStyle = '#060506'; ctx.fill(rrPath(scr.x - bw, scr.y - bw, scr.w + bw*2, scr.h + bw*2, scr.r + bw));
+    }
+  }
+  ctx.save();
+  if (st.frame) ctx.clip(rrPath(scr.x, scr.y, scr.w, scr.h, scr.r));
+  ctx.drawImage(bgFor(S).bg, 0, 0, W, H);
+  if (st.mode === 'noti') drawNoti(ctx, S); else drawBubbles(ctx, S);
+  if (st.status) drawStatus(ctx);
+  if (st.frame){
+    drawIsland(ctx);
+    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.stroke(rrPath(scr.x, scr.y, scr.w, scr.h, scr.r));
+  }
+  ctx.restore();
+  if (st.frame){
+    const oR = sr + T;
+    ctx.lineWidth = 4; ctx.strokeStyle = th.rim; ctx.stroke(rrPath(2.5, 2.5, W-5, H-5, oR));
+    ctx.lineWidth = 1.5; ctx.strokeStyle = `rgba(255,255,255,${th.hi})`; ctx.stroke(rrPath(7, 7, W-14, H-14, oR - 4));
+  }
+  if (guides) drawGuides(ctx);
+}
+
+/* ---------- preview ---------- */
+const cv = $('#cv'), cx = cv.getContext('2d'), wrapEl = $('#wrap');
+let S = 1, raf = 0;
+function sizeCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+  const s = Math.min(2, Math.max(0.4, Math.round((wrapEl.clientWidth * dpr / W) * 10) / 10));
+  if (s !== S || cv.width !== Math.round(W*s)){ S = s; cv.width = Math.round(W*S); cv.height = Math.round(H*S); }
+}
+function draw(){ sizeCanvas(); drawScene(cx, S, st.guides); }
+function schedule(){ if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); }); }
+async function ensureFonts(){
+  const txt = [st.botText, st.botSub, st.topText, st.topSub, st.nTitle, st.nBody, st.nTime, st.n2Title, st.n2Body, st.n2Time, st.n3Title, st.n3Body, st.n3Time].join('') + '가나다abc0123';
+  const ws = new Set([st.weight, Math.min(500, st.weight), Math.max(600, st.weight), Math.min(600, Math.max(500, st.weight - 200)), 400]);
+  const jobs = [...ws].map(w => document.fonts.load(`${w} 40px "${st.font}"`, txt).catch(() => {}));
+  jobs.push(document.fonts.load(`600 40px "Gothic A1"`, st.clock + '0123456789%인장자리').catch(() => {}));
+  await Promise.race([Promise.all(jobs), new Promise(r => setTimeout(r, 3500))]);
+}
+let fontSeq = 0;
+async function refresh(){
+  schedule();
+  const my = ++fontSeq;
+  await ensureFonts();
+  if (my === fontSeq) schedule();
+}
+new ResizeObserver(() => { const old = S; sizeCanvas(); if (old !== S) { invalidateBg(); } schedule(); }).observe(wrapEl);
+
+/* drag to move */
+let drag = null;
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId);
+  const noti = st.mode === 'noti';
+  drag = {x: e.clientX, y: e.clientY, a: noti ? st.nx : st.bx, b: noti ? st.ny : st.by, noti};
+});
+cv.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const k = W / cv.getBoundingClientRect().width;
+  const dx = (e.clientX - drag.x)*k, dy = (e.clientY - drag.y)*k;
+  const clamp = (v, a, b) => Math.round(Math.min(b, Math.max(a, v)));
+  if (drag.noti){ st.nx = clamp(drag.a + dx, 250, 1250); st.ny = clamp(drag.b + dy, 0, 400); }
+  else { st.bx = clamp(drag.a + dx, 0, 1500); st.by = clamp(drag.b + dy, 120, 500); }
+  ['nx','ny','bx','by'].forEach(key => { const el = document.getElementById(key); if (el) el.value = st[key]; const o = document.querySelector(`[data-out="${key}"]`); if (o) o.textContent = st[key]; });
+  schedule();
+});
+const endDrag = () => { if (drag){ drag = null; changed(); } };
+cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+
+/* ---------- images ---------- */
+function loadImage(src){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+async function shrink(file, maxW, maxH, type, q){
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    const sc = Math.min(1, maxW / img.naturalWidth, maxH / img.naturalHeight);
+    const c = mkCanvas(img.naturalWidth*sc, img.naturalHeight*sc);
+    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, c.width, c.height);
+    const data = c.toDataURL(type, q);
+    return {img: c, data};
+  } finally { URL.revokeObjectURL(url); }
+}
+async function setBgFile(file){
+  if (!file || !file.type.startsWith('image/')) { toast('이미지 파일만 넣을 수 있어요'); return; }
+  const {img, data} = await shrink(file, 3600, 3600, 'image/jpeg', 0.9);
+  bgImg = img; st.hasImg = true; st.bgZoom = 100; st.bgX = 0; st.bgY = 0;
+  if (!store.set('twh-bg', data)) store.del('twh-bg');
+  invalidateBg(); syncUI(); changed();
+}
+$('#bgFile').addEventListener('change', e => { setBgFile(e.target.files[0]); e.target.value = ''; });
+$('#bgRemove').addEventListener('click', () => { bgImg = null; st.hasImg = false; store.del('twh-bg'); invalidateBg(); syncUI(); changed(); });
+$('#iconFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const {img, data} = await shrink(f, 300, 300, 'image/png');
+  iconImg = img; store.set('twh-icon', data); changed();
+});
+['dragenter','dragover'].forEach(t => wrapEl.addEventListener(t, e => { e.preventDefault(); wrapEl.classList.add('drop'); }));
+['dragleave','drop'].forEach(t => wrapEl.addEventListener(t, e => { e.preventDefault(); wrapEl.classList.remove('drop'); }));
+wrapEl.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) setBgFile(f); });
+
+/* ---------- export ---------- */
+let toastT = 0;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2400); }
+$('#saveBtn').addEventListener('click', async () => {
+  const btn = $('#saveBtn'); btn.disabled = true;
+  try {
+    await ensureFonts();
+    const ES = Number(st.exportScale) || 1;
+    const out = mkCanvas(W*ES, H*ES);
+    drawScene(out.getContext('2d'), ES, false);
+    const blob = await new Promise(r => out.toBlob(r, 'image/png'));
+    const name = `twitter-header-${ES === 2 ? '3000x1000' : '1500x500'}.png`;
+    try {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      toast('저장했어요');
+    } catch (err){
+      $('#outImg').src = out.toDataURL('image/png');
+      $('#modal').hidden = false;
+    }
+  } finally { btn.disabled = false; }
+});
+$('#modalClose').addEventListener('click', () => $('#modal').hidden = true);
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') $('#modal').hidden = true; });
+
+/* reset (two taps) */
+let resetArm = 0;
+$('#resetBtn').addEventListener('click', () => {
+  const b = $('#resetBtn');
+  if (!resetArm){ b.textContent = '한 번 더 누르면 초기화'; resetArm = setTimeout(() => { resetArm = 0; b.textContent = '설정 초기화'; }, 3000); return; }
+  clearTimeout(resetArm); resetArm = 0; b.textContent = '설정 초기화';
+  st = Object.assign({}, DEFAULTS); bgImg = null; iconImg = null;
+  store.del('twh-bg'); store.del('twh-icon');
+  fillWeights(); invalidateBg(); syncUI(); changed(); toast('처음 상태로 돌렸어요');
+});
+
+/* ---------- boot ---------- */
+(async () => {
+  const bgData = store.get('twh-bg'), icData = store.get('twh-icon');
+  if (st.hasImg && bgData){ try { bgImg = await loadImage(bgData); } catch(e){ st.hasImg = false; } } else st.hasImg = false;
+  if (icData){ try { iconImg = await loadImage(icData); } catch(e){} }
+  fillWeights(); syncUI(); invalidateBg(); refresh();
+})();
+})();
+</script>
+
+</body>
+</html>
